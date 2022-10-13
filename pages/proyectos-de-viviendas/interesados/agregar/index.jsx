@@ -111,7 +111,7 @@ function index(props) {
     <Form onSubmit={(e) => handleSubmitForm(e)}>
       <Form.Field>
         <label>Nombre completo</label>
-        <input placeholder='Nombre completo' value={InterestedPersonFormValues.name} onChange={(e) => handleChangeForm("name", e.target.value)}/>
+        <input required placeholder='Nombre completo' value={InterestedPersonFormValues.name} onChange={(e) => handleChangeForm("name", e.target.value)}/>
       </Form.Field>
       <Form.Field>
         <label>Número de teléfono</label>
@@ -119,9 +119,10 @@ function index(props) {
       </Form.Field>
       <Form.Field>
         <label>Email</label>
-        <input placeholder='Número de teléfono' value={InterestedPersonFormValues.email} onChange={(e) => handleChangeForm("email", e.target.value)}/>
+        <input required placeholder='Número de teléfono' value={InterestedPersonFormValues.email} onChange={(e) => handleChangeForm("email", e.target.value)}/>
       </Form.Field>
       <Form.Field
+      required
         control={Select}
         options={projectOptions}
         label={{ children: 'proyecto', htmlFor: 'form-select-control-proyecto' }}
@@ -143,7 +144,7 @@ function index(props) {
             />
       <Form.Field>
         <label>Ciudad</label>
-        <input placeholder='Ciudad'
+        <input required placeholder='Ciudad'
         value={InterestedPersonFormValues.city} onChange={(e) => handleChangeForm("city", e.target.value)} />
       </Form.Field>
       {loadingPost &&

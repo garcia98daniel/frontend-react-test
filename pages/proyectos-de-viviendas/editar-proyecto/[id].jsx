@@ -124,6 +124,7 @@ function index(props) {
           <Form.Field>
             <label>Nombre</label>
             <input
+            required
               placeholder="Nombre"
               value={projectValues.name}
               onChange={(e) => handleChangeForm("name", e.target.value)}
@@ -132,12 +133,14 @@ function index(props) {
           <Form.Field>
             <label>Dirección</label>
             <input
+            required
               placeholder="Dirección"
               value={projectValues.address}
               onChange={(e) => handleChangeForm("address", e.target.value)}
             />
           </Form.Field>
           <Form.Field
+          required
             control={Select}
             options={constructors}
             label={{
@@ -154,6 +157,7 @@ function index(props) {
           <Form.Field>
             <label>Contacto</label>
             <input
+            required
               placeholder="Contacto"
               value={projectValues.contact}
               onChange={(e) => handleChangeForm("contact", e.target.value)}

@@ -79,13 +79,14 @@ function index(props) {
     <Form onSubmit={(e) => handleSubmitForm(e)}>
       <Form.Field>
         <label>Nombre</label>
-        <input placeholder='Nombre' value={projectValues.name} onChange={(e) => handleChangeForm("name", e.target.value)}/>
+        <input required placeholder='Nombre' value={projectValues.name} onChange={(e) => handleChangeForm("name", e.target.value)}/>
       </Form.Field>
       <Form.Field>
         <label>Dirección</label>
-        <input placeholder='Dirección' value={projectValues.address} onChange={(e) => handleChangeForm("address", e.target.value)} />
+        <input required placeholder='Dirección' value={projectValues.address} onChange={(e) => handleChangeForm("address", e.target.value)} />
       </Form.Field>
       <Form.Field
+      required
         control={Select}
         options={constructors}
         label={{ children: 'Constructora', htmlFor: 'form-select-control-constructora' }}
@@ -98,7 +99,7 @@ function index(props) {
       />
       <Form.Field>
         <label>Contacto</label>
-        <input placeholder='Contacto' value={projectValues.contact} onChange={(e) => handleChangeForm("contact", e.target.value)} />
+        <input required placeholder='Contacto' value={projectValues.contact} onChange={(e) => handleChangeForm("contact", e.target.value)} />
       </Form.Field>
       
       <Button primary type='submit'>Crear proyecto</Button>
