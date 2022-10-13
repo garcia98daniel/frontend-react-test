@@ -1,10 +1,68 @@
-import React from "react";
-import { Container, Header, Button, Checkbox, Icon, Table } from "semantic-ui-react";
+import React, { useState, useEffect, useCallback } from "react";
+
+import { Container, Header, Button, Checkbox, Icon, Table, Dimmer, Loader } from "semantic-ui-react";
 import { useRouter } from "next/router";
 import styles from "./styles.module.css"
 function index(props) {
     const router = useRouter();
+    const {id} = router.query;
+    const [data, setData] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
 
+    const fetchInterestedPeople = useCallback(async () => {
+      try{
+        setLoading(true)
+        const response = await fetch(`http://127.0.0.1:8000/api/interesados/proyecto/${id}`,{
+          method: 'GET',
+          headers:{
+            accpet:"application/json"
+          }
+        })
+
+        const json = await response.json();
+        console.log(json.data)
+        setData(json.data)
+      }catch(err){
+        setError(err)
+      }finally{
+        setLoading(false)
+      }
+      setLoading(false)
+    },[])
+
+    useEffect(() => {
+
+      if(id){
+        fetchInterestedPeople().catch(console.error)
+      }
+    },[id])
+
+
+    const handleDeleteInterestedPerson = async (id) =>{
+      setLoading(true)
+      try{
+      const response = await fetch(`http://127.0.0.1:8000/api/interesados/proyecto/delete/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+      const json = await response.json();
+      if(json.data.hasOwnProperty('id')){
+        setData({
+          ...data,
+          interested_people: data?.interested_people?.filter((interestedPerson) => interestedPerson.id !== id)
+        });
+        alert("Persona eliminada con exíto")
+      }
+    }catch(err){
+      setError(err)
+    }finally{
+      setLoading(false)
+    }
+      setLoading(false);
+    }
   return (
     <>
       <Header as="h3" block>
@@ -12,7 +70,7 @@ function index(props) {
       </Header>
       <Container>
       <h2 onClick={() => router.back()} ><Icon name="arrow circle left"/> volver</h2>      
-      <h2>Personas interesadas en el proyecto :id<Icon name="users"/></h2>
+      <h2>Personas interesadas en el proyecto {data.id}<Icon name="users"/></h2>
       <Table compact celled >
         <Table.Header>
           <Table.Row>
@@ -27,21 +85,35 @@ function index(props) {
         </Table.Header>
 
         <Table.Body>
-          <Table.Row>
-            <Table.Cell>John Lilki</Table.Cell>
-            <Table.Cell>32145689</Table.Cell>
-            <Table.Cell>jhlilk22@yahoo.com</Table.Cell>
-            <Table.Cell>Edad</Table.Cell>
-            <Table.Cell>Santa Marta</Table.Cell>
-            <Table.Cell collapsing className={styles.delete_container_cell}>
-              <Icon name="trash" color="red"/>
-            </Table.Cell>
-            <Table.Cell collapsing className={styles.edit_container_cell} onClick={() => router.push(`/proyectos-de-viviendas/interesados/editar/${123}`)}>
-              <Icon name="edit" />
-            </Table.Cell>
-          </Table.Row>
+            {data?.interested_people?.length > 0 &&
+              data.interested_people.map((interestedPerson) => {
+                return(
+                <Table.Row key={interestedPerson.id}>
+                  <Table.Cell>{interestedPerson.name}</Table.Cell>
+                  <Table.Cell>{interestedPerson.contact}</Table.Cell>
+                  <Table.Cell>{interestedPerson.email}</Table.Cell>
+                  <Table.Cell>{interestedPerson.date_of_birth}</Table.Cell>
+                  <Table.Cell>{interestedPerson.city}</Table.Cell>
+                  <Table.Cell collapsing className={styles.delete_container_cell}>
+                    <Icon name="trash" color="red" onClick={() => handleDeleteInterestedPerson(interestedPerson.id)}/>
+                  </Table.Cell>
+                  <Table.Cell collapsing className={styles.edit_container_cell} onClick={() => router.push(`/proyectos-de-viviendas/interesados/editar/${interestedPerson.id}`)}>
+                    <Icon name="edit" />
+                  </Table.Cell>
+                </Table.Row>
+                )
+              })
+            }
         </Table.Body>
-
+        {loading && 
+            <Table.Row>
+              <Table.Cell colSpan="7" >
+                <Dimmer active inverted>
+                  <Loader inverted>Loading</Loader>
+                </Dimmer>
+              </Table.Cell>
+            </Table.Row>
+            }
         <Table.Footer fullWidth>
           <Table.Row>
             <Table.HeaderCell colSpan="7">

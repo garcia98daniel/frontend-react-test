@@ -1,51 +1,179 @@
-import React from 'react';
-import Head from 'next/head'
-import Image from 'next/image'
-import { Header, Form, Button, Container, Select } from 'semantic-ui-react'
+import React, { useState, useEffect, useCallback } from "react";
+import Head from "next/head";
+import Image from "next/image";
+import { Header, Form, Button, Container, Select, 
+  Dimmer, Loader, 
+ } from "semantic-ui-react";
 import { useRouter } from "next/router";
+import { useFetchConstructors } from "../../../hooks/useFetchConstructors";
 function index(props) {
-    const router = useRouter();
-    const genderOptions = [
-        { key: 'm', text: 'Male', value: 'male' },
-        { key: 'f', text: 'Female', value: 'female' },
-        { key: 'o', text: 'Other', value: 'other' },
-      ]
+  const router = useRouter();
+  const { id } = router.query;
+  const [loadingEdit, setLoadingEdit] = useState(false);
+  const [errorEdit, setErrorEdit] = useState();
+  const { data, loading, error } = useFetchConstructors(
+    "http://127.0.0.1:8000/api/constructors"
+  );
+  const [constructors, setConstructors] = useState(null);
+  const [projectValues, setProjectValues] = useState({
+    name: "",
+    address: "",
+    constructors_id: "",
+    contact: "",
+  });
 
-    return (
-        <>
-    <Header as='h3' block>
-    Modulo Proyectos de viviendas
-    </Header>
-    <Container>
-      <h2>Editar proyecto :id</h2>
-    <Form>
-      <Form.Field>
-        <label>Nombre</label>
-        <input placeholder='Nombre' />
-      </Form.Field>
-      <Form.Field>
-        <label>Dirección</label>
-        <input placeholder='Dirección' />
-      </Form.Field>
-      <Form.Field
-        control={Select}
-        options={genderOptions}
-        label={{ children: 'Constructora', htmlFor: 'form-select-control-constructora' }}
-        placeholder='Constructora'
-        search
-        searchInput={{ id: 'form-select-control-constructora' }}
-      />
-      <Form.Field>
-        <label>Contacto</label>
-        <input placeholder='Contacto' />
-      </Form.Field>
-      
-      <Button primary type='submit'>Guardar</Button>
-      <Button onClick={() => router.back()} type='submit'>Volver</Button>
-    </Form>
-    </Container>
-    </>
+  useEffect(() => {
+    setConstructors(
+      data?.map((constructors, index) => {
+        return {
+          key: constructors.id,
+          text: constructors.name,
+          value: constructors.id,
+        };
+      })
     );
+  }, [data]);
+
+  useEffect(() => {
+    const fetchProject = async () => {
+      try {
+        const response = await fetch(
+          `http://127.0.0.1:8000/api/projects/${id}`,
+          {
+            method: "GET",
+            header: {
+              Accept: "application/json",
+            },
+          }
+        );
+        const json = await response.json();
+          console.log(json.data.name);
+          setProjectValues({
+            name: json.data.name,
+            address: json.data.address,
+            constructors_id: json.data.constructors_id,
+            contact: json.data.contact,
+          });
+      } catch (err) {
+        setErrorEdit(err);
+      } finally {
+        setLoadingEdit(false);
+      }
+      setLoadingEdit(false);
+    };
+    if(id){
+      fetchProject().catch(console.error);
+    }
+  }, [id]);
+
+  const handleChangeForm_select = (event, data) => {
+    const { name, value } = data;
+    console.log(name);
+    setProjectValues({ ...projectValues, [name]: value });
+  };
+
+  const handleChangeForm = (key, value) => {
+    setProjectValues(
+      {...projectValues, [key]: value}
+    )
+  }
+
+  const handleSubmitForm = async (e) => {
+    e.preventDefault();
+    let body = {
+      id: id,
+      name: projectValues.name,
+      address: projectValues.address,
+      constructors_id: projectValues.constructors_id,
+      contact: projectValues.contact,
+    };
+    setLoadingEdit(true);
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:8000/api/projects/edit?_method=patch`,
+        {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+          },
+          body: JSON.stringify(body),
+        }
+      );
+
+      const json = await response.json();
+      if (json.data.hasOwnProperty("id")) {
+        alert("proyecto editado con exíto");
+        router.back();
+      }
+    } catch (err) {
+      setErrorEdit(err);
+    } finally {
+      setLoadingEdit(false);
+    }
+    setLoadingEdit(false);
+  };
+
+  return (
+    <>
+      <Header as="h3" block>
+        Modulo Proyectos de viviendas
+      </Header>
+      <Container>
+        <h2>Editar proyecto {projectValues.id}</h2>
+        <Form onSubmit={(e) => handleSubmitForm(e)}>
+          <Form.Field>
+            <label>Nombre</label>
+            <input
+              placeholder="Nombre"
+              value={projectValues.name}
+              onChange={(e) => handleChangeForm("name", e.target.value)}
+            />
+          </Form.Field>
+          <Form.Field>
+            <label>Dirección</label>
+            <input
+              placeholder="Dirección"
+              value={projectValues.address}
+              onChange={(e) => handleChangeForm("address", e.target.value)}
+            />
+          </Form.Field>
+          <Form.Field
+            control={Select}
+            options={constructors}
+            label={{
+              children: "Constructora",
+              htmlFor: "form-select-control-constructora",
+            }}
+            placeholder="Constructora"
+            search
+            searchInput={{ id: "form-select-control-constructora" }}
+            name="constructors_id"
+            value={projectValues.constructors_id}
+            onChange={handleChangeForm_select}
+          />
+          <Form.Field>
+            <label>Contacto</label>
+            <input
+              placeholder="Contacto"
+              value={projectValues.contact}
+              onChange={(e) => handleChangeForm("contact", e.target.value)}
+            />
+          </Form.Field>
+          {loading && 
+                <Dimmer active inverted>
+                  <Loader inverted>Loading</Loader>
+                </Dimmer>
+            }
+          <Button primary type="submit">
+            Guardar
+          </Button>
+          <Button onClick={() => router.back()} type="submit">
+            Volver
+          </Button>
+        </Form>
+      </Container>
+    </>
+  );
 }
 
 export default index;
